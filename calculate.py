@@ -1,6 +1,7 @@
 from __future__ import division
 import dateutil.parser
 import math
+from collections import namedtuple
 
 
 class Disk(object):
@@ -43,69 +44,71 @@ class GenomicsOperation(object):
             return None
 
 
+Resource = namedtuple('Resource', ['duration', 'region', 'name', 'units'])
+
+def vm_resource_name(name, premptible):
+    identifier = 'CP-COMPUTEENGINE-VMIMAGE-{0}'.format(name.upper())
+    if premptible:
+        identifier = identifier + '-PREEMPTIBLE'
+    return identifier
+
+def disk_resource_name(type_):
+    lineitem = 'CP-COMPUTEENGINE-STORAGE-PD-{0}'
+    if type_ == 'PERSISTENT_HDD':
+        disk_code = 'CAPACITY'
+    elif type_ == 'PERSISTENT_SSD':
+        disk_code = 'SSD'
+    else:
+        raise RuntimeError('Unknown disk type: {0}'.format(type_))
+    return lineitem.format(disk_code)
+
+def vm_duration(duration):
+    minutes = duration / 60.0
+    if minutes < 10:  # Enforce minimum of 10 minutes
+        price_duration = 10
+    else:
+        price_duration = math.ceil(minutes)  # round up to nearest minute
+    return price_duration / 60  # convert to hours to match price
+
+def disk_duration(duration):
+    # convert to months. Assuming a 30.5 day month or 732 hours.
+    # rounding up the seconds. Not sure if necessary
+    return math.ceil(duration) / 60 / 60 / 24 / 30.5
+
+def vm_resource(op):
+    return Resource(
+            duration=vm_duration(op.duration()),
+            region=op.region,
+            name=vm_resource_name(op.machine, op.preemptible),
+            units=1,
+            )
+
+def disk_resources(op):
+    return [Resource(
+                duration=disk_duration(op.duration()),
+                region=op.region,
+                name=disk_resource_name(d.type_),
+                units=d.size,
+                ) for d in op.disks
+            ]
+
+def as_resources(op):
+    resources = disk_resources(op)
+    resources.append(vm_resource(op))
+    return resources
+
+
 class OperationCostCalculator(object):
 
     def __init__(self, pricelist_json):
         self.pricelist_json = pricelist_json
 
     def cost(self, operation):
-        region = operation.region
-        machine = operation.machine
-        preemptible = operation.preemptible
-        duration = operation.duration()
-        cost = self.resource_cost(
-            self.vm_duration(duration),
-            self.price(
-                self.machine_name_to_resource(machine, preemptible),
-                region
-                )
-            )
-        for d in operation.disks:
-            cost = cost + self.resource_cost(
-                self.disk_duration(duration),
-                self.price(
-                    self.disk_type_to_resource(d.type_),
-                    region
-                    ),
-                d.size
-                )
-        return cost
+        return sum([self.resource_cost(x) for x in as_resources(operation)])
 
-    def price(self, resource, region):
-        return self.pricelist_json['gcp_price_list'][resource][region]
+    def price(self, resource):
+        return self.pricelist_json['gcp_price_list'][resource.name][resource.region]
 
-    def resource_cost(self, duration, price, units=1):
-        return duration * price * units
+    def resource_cost(self, resource):
+        return resource.duration * self.price(resource) * resource.units
 
-    @staticmethod
-    def machine_name_to_resource(name, premptible):
-        lineitem = 'CP-COMPUTEENGINE-VMIMAGE-{0}'.format(name.upper())
-        if premptible:
-            lineitem = lineitem + '-PREEMPTIBLE'
-        return lineitem
-
-    @staticmethod
-    def disk_type_to_resource(type_):
-        lineitem = 'CP-COMPUTEENGINE-STORAGE-PD-{0}'
-        if type_ == 'PERSISTENT_HDD':
-            disk_code = 'CAPACITY'
-        elif type_ == 'PERSISTENT_SSD':
-            disk_code = 'SSD'
-        else:
-            raise RuntimeError('Unknown disk type: {0}'.format(type_))
-        return lineitem.format(disk_code)
-
-    @staticmethod
-    def vm_duration(duration):
-        minutes = duration / 60.0
-        if minutes < 10:  # Enforce minimum of 10 minutes
-            price_duration = 10
-        else:
-            price_duration = math.ceil(minutes)  # round up to nearest minute
-        return price_duration / 60  # convert to hours to match price
-
-    @staticmethod
-    def disk_duration(duration):
-        # convert to months. Assuming a 30.5 day month or 732 hours.
-        # rounding up the seconds. Not sure if necessary
-        return math.ceil(duration) / 60 / 60 / 24 / 30.5
