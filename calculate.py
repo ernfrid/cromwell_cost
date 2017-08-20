@@ -46,11 +46,13 @@ class GenomicsOperation(object):
 
 Resource = namedtuple('Resource', ['duration', 'region', 'name', 'units'])
 
+
 def vm_resource_name(name, premptible):
     identifier = 'CP-COMPUTEENGINE-VMIMAGE-{0}'.format(name.upper())
     if premptible:
         identifier = identifier + '-PREEMPTIBLE'
     return identifier
+
 
 def disk_resource_name(type_):
     lineitem = 'CP-COMPUTEENGINE-STORAGE-PD-{0}'
@@ -62,6 +64,7 @@ def disk_resource_name(type_):
         raise RuntimeError('Unknown disk type: {0}'.format(type_))
     return lineitem.format(disk_code)
 
+
 def vm_duration(duration):
     minutes = duration / 60.0
     if minutes < 10:  # Enforce minimum of 10 minutes
@@ -70,10 +73,12 @@ def vm_duration(duration):
         price_duration = math.ceil(minutes)  # round up to nearest minute
     return price_duration / 60  # convert to hours to match price
 
+
 def disk_duration(duration):
     # convert to months. Assuming a 30.5 day month or 732 hours.
     # rounding up the seconds. Not sure if necessary
     return math.ceil(duration) / 60 / 60 / 24 / 30.5
+
 
 def vm_resource(op):
     return Resource(
@@ -83,6 +88,7 @@ def vm_resource(op):
             units=1,
             )
 
+
 def disk_resources(op):
     return [Resource(
                 duration=disk_duration(op.duration()),
@@ -91,6 +97,7 @@ def disk_resources(op):
                 units=d.size,
                 ) for d in op.disks
             ]
+
 
 def as_resources(op):
     resources = disk_resources(op)
@@ -111,4 +118,3 @@ class OperationCostCalculator(object):
 
     def resource_cost(self, resource):
         return resource.duration * self.price(resource) * resource.units
-
