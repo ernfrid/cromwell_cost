@@ -30,7 +30,7 @@ class GenomicsOperation(object):
             self.length = self.end_time - self.start_time
         except KeyError:
             self.end_time = None
-            self.duration = None
+            self.length = None
 
         self.disks = [
             Disk(x['sizeGb'], x['type']) for x in resources_dict['disks']
