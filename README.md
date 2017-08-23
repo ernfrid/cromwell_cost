@@ -1,5 +1,6 @@
 # cromwell_cost
-Estimate cost of cromwell workflow on Google.
+Estimate cost of cromwell workflow on Google. Doesn't include network egress or
+sustained usage discounts. Not all resource types included.
 
 ## Requirements
 python 2.7
