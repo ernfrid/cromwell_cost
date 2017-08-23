@@ -41,7 +41,7 @@ class CromwellCostCalculator(object):
             task_totals = defaultdict(int)
             for e in executions:
                 op = GenomicsOperation(self.get_operation_metadata(e.jobid()))
-                print "operation: {}".format(op)
+                print 'operation: {}'.format(op)
                 task_totals[e.shard()] = task_totals[e.shard()] + self.dollars(self.calculator.cost(op))
                 total_cost += self.dollars(self.calculator.cost(op))
             summary_json['tasks'].append({
@@ -57,8 +57,8 @@ class CromwellCostCalculator(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("pricelist", type=argparse.FileType('r'), help="pricelist.json from Google containing cost information")
-    parser.add_argument("metadata", type=argparse.FileType('r'), help="metadata from a cromwell workflow from which to estimate cost")
+    parser.add_argument('pricelist', type=argparse.FileType('r'), help='pricelist.json from Google containing cost information')
+    parser.add_argument('metadata', type=argparse.FileType('r'), help='metadata from a cromwell workflow from which to estimate cost')
     args = parser.parse_args()
     metadata = json.load(args.metadata)
     pricelist = json.load(args.pricelist)
