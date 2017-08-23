@@ -11,6 +11,7 @@ from collections import defaultdict
 import json
 import sys
 import math
+import argparse
 
 
 class CromwellCostCalculator(object):
@@ -55,8 +56,12 @@ class CromwellCostCalculator(object):
         return summary_json
 
 if __name__ == '__main__':
-    metadata = json.load(open(sys.argv[1]))
-    pricelist = json.load(open('pricelist.json'))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pricelist", type=argparse.FileType('r'), help="pricelist.json from Google containing cost information")
+    parser.add_argument("metadata", type=argparse.FileType('r'), help="metadata from a cromwell workflow from which to estimate cost")
+    args = parser.parse_args()
+    metadata = json.load(args.metadata)
+    pricelist = json.load(args.pricelist)
 
     calc = CromwellCostCalculator(pricelist)
     cost = calc.calculate_cost(metadata)
