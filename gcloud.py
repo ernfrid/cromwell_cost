@@ -43,6 +43,25 @@ class GenomicsOperation(object):
         else:
             return None
 
+    def __str__(self):
+        return ("(machine: {}, "
+                "zone: {}, "
+                "region: {}, "
+                "preemptible: {}, "
+                "start_time: {}, "
+                "end_time: {}, "
+                "length: {}, "
+                "duration: {} )").format(
+                        self.machine,
+                        self.zone,
+                        self.region,
+                        self.preemptible,
+                        self.start_time,
+                        self.end_time,
+                        self.length,
+                        self.duration()
+                        )
+
 
 Resource = namedtuple('Resource', ['duration', 'region', 'name', 'units'])
 
