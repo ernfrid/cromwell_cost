@@ -6,8 +6,8 @@ Resource usage is calculated by querying the genomics api using operations ids p
 
 
 ## Requirements
-python 2.7
-pip install --upgrade google-api-python-client
+* python 2.7
+* pip install --upgrade google-api-python-client
 
 ## Usage
 
