@@ -34,7 +34,7 @@ class CromwellCostCalculator(object):
         metadata = Metadata(metadata_json)
 
         total_cost = 0
-        max_shard = -1
+        max_samples = -1
         summary_json = { 'tasks': [], 'total_cost': None, 'cost_per_shard': None }
 
         for task, executions in metadata.calls().iteritems():
@@ -50,9 +50,9 @@ class CromwellCostCalculator(object):
                     'cost_per_shard': self.dollars(sum(task_totals.values())/len(task_totals)),
                     'total_cost': self.dollars(sum(task_totals.values()))
                     })
-            max_shard = max(max_shard, len(task_totals))
+            max_samples = max(max_samples, len(task_totals))
         summary_json['total_cost'] = total_cost
-        summary_json['cost_per_shard'] = total_cost / max_shard
+        summary_json['cost_per_shard'] = total_cost / max_samples
         return summary_json
 
 if __name__ == '__main__':
