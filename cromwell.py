@@ -1,3 +1,5 @@
+import json
+
 class Execution(object):
 
     def __init__(self, json):
@@ -11,6 +13,9 @@ class Execution(object):
 
     def jobid(self):
         return self.json['jobId']
+
+    def __str__(self):
+        return json.dumps(self.json, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 class Metadata(object):
