@@ -40,6 +40,7 @@ class CromwellCostCalculator(object):
         for task, executions in metadata.calls().iteritems():
             task_totals = defaultdict(int)
             for e in executions:
+                if e.jobid() is None: continue
                 op = GenomicsOperation(self.get_operation_metadata(e.jobid()))
                 print 'operation: {}'.format(op)
                 task_totals[e.shard()] = task_totals[e.shard()] + self.dollars(self.calculator.cost(op))
@@ -47,7 +48,7 @@ class CromwellCostCalculator(object):
             summary_json['tasks'].append({
                     'name': task,
                     'shards': len(task_totals),
-                    'cost_per_shard': self.dollars(sum(task_totals.values())/len(task_totals)),
+                    'cost_per_shard': self.dollars(sum(task_totals.values())/len(task_totals)) if len(task_totals) != 0 else 0,
                     'total_cost': self.dollars(sum(task_totals.values()))
                     })
             max_samples = max(max_samples, len(task_totals))
