@@ -34,25 +34,39 @@ class CromwellCostCalculator(object):
         metadata = Metadata(metadata_json)
 
         total_cost = 0
+        total_time = 0
         max_samples = -1
-        summary_json = { 'tasks': [], 'total_cost': None, 'cost_per_shard': None }
+        summary_json = { 'tasks': [], 'total_cost': None, 'cost_per_shard': None, 'total_time': None, 'time_per_shard': None }
 
         for task, executions in metadata.calls().iteritems():
             task_totals = defaultdict(int)
+            task_durations = defaultdict(int)
+            task_machines = set()
             for e in executions:
-                op = GenomicsOperation(self.get_operation_metadata(e.jobid()))
-                print 'operation: {}'.format(op)
-                task_totals[e.shard()] = task_totals[e.shard()] + self.dollars(self.calculator.cost(op))
-                total_cost += self.dollars(self.calculator.cost(op))
+                try:
+                    op = GenomicsOperation(self.get_operation_metadata(e.jobid()))
+                except KeyError:
+                    print 'Skipping operation with no jobid: {0}'.format(str(e))
+                #print 'operation: {}'.format(op)
+                task_totals[e.shard()] = task_totals[e.shard()] + self.calculator.cost(op)
+                task_durations[e.shard()] = task_durations[e.shard()] + op.duration()
+                task_machines.add(op.machine)
+                total_cost += self.calculator.cost(op)
+                total_time += op.duration()
             summary_json['tasks'].append({
                     'name': task,
                     'shards': len(task_totals),
                     'cost_per_shard': self.dollars(sum(task_totals.values())/len(task_totals)),
-                    'total_cost': self.dollars(sum(task_totals.values()))
+                    'total_cost': self.dollars(sum(task_totals.values())),
+                    'time': sum(task_durations.values()),
+                    'time_per_shard': sum(task_durations.values()) / len(task_totals),
+                    'machines': '\t'.join(task_machines),
                     })
             max_samples = max(max_samples, len(task_totals))
-        summary_json['total_cost'] = total_cost
-        summary_json['cost_per_shard'] = total_cost / max_samples
+        summary_json['total_cost'] = self.dollars(total_cost)
+        summary_json['total_time'] = total_time
+        summary_json['cost_per_shard'] = self.dollars(total_cost) / max_samples
+        summary_json['time_per_shard'] = total_time / max_samples
         return summary_json
 
 if __name__ == '__main__':

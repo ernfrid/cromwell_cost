@@ -85,15 +85,12 @@ def disk_resource_name(type_):
 
 
 def vm_duration(duration):
-    '''Return the duration in hours with a minimum of 10 minutes.'''
+    '''Return the duration in hours with a minimum of 1 minutes.'''
     # All machine types are charged a minimum of 10 minutes.
     # See https://cloud.google.com/compute/pricing#billingmodel
-    minutes = duration / 60.0
-    if minutes < 10:  # Enforce minimum of 10 minutes
-        price_duration = 10
-    else:
-        price_duration = math.ceil(minutes)  # round up to nearest minute
-    return price_duration / 60  # convert to hours to match price
+    if duration < 60:  # Enforce minimum of 1 minutes
+        price_duration = 60
+    return duration / 60.0 / 60.0
 
 
 def disk_lifetime(duration):
