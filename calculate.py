@@ -48,7 +48,7 @@ class CromwellCostCalculator(object):
             summary_json['tasks'].append({
                     'name': task,
                     'shards': len(task_totals),
-                    'cost_per_shard': self.dollars(sum(task_totals.values())/len(task_totals)),
+                    'cost_per_shard': self.dollars(sum(task_totals.values())/len(task_totals)) if len(task_totals) != 0 else 0,
                     'total_cost': self.dollars(sum(task_totals.values()))
                     })
             max_samples = max(max_samples, len(task_totals))
