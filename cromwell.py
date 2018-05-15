@@ -12,7 +12,7 @@ class Execution(object):
         return self.json['shardIndex']
 
     def jobid(self):
-        return self.json['jobId']
+        return self.json.get('jobId', None)
 
     def __str__(self):
         return json.dumps(self.json, sort_keys=True, indent=4, separators=(',', ': '))

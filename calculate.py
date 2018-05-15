@@ -40,6 +40,7 @@ class CromwellCostCalculator(object):
         for task, executions in metadata.calls().iteritems():
             task_totals = defaultdict(int)
             for e in executions:
+                if e.jobid() is None: continue
                 op = GenomicsOperation(self.get_operation_metadata(e.jobid()))
                 print 'operation: {}'.format(op)
                 task_totals[e.shard()] = task_totals[e.shard()] + self.dollars(self.calculator.cost(op))
